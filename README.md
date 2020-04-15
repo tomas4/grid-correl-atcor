@@ -17,7 +17,7 @@ Usage:
    [minr=value] [regression=string] [interpolation=string]
    [lambda_i=value] [--overwrite] [--help] [--verbose] [--quiet] [--ui]
 
-Přepínače:
+Flags:
   -k   Keep temporary files created during operation.
   -v   Verbose processing information.
 
@@ -27,17 +27,17 @@ Parameters:
          output   Select name of output corrected band.
           masks   Select the raster(s) to mask out invalid/changing pixels.
        gridsize   Approx. grid tile size in map units (6000 in m means box 6x6 km).
-                  výchozí: 6000
+                  default: 6000
          pixels   Minimal number of valid pixels in tile.
-                  výchozí: 100
+                  default: 100
            minr   Minimal correlation coefficient R to accept.
-                  výchozí: 0.85
+                  default: 0.85
      regression   Regression method: theil_sen - TheilSen regression, orthogonal - orthogonal regression, least_sq - ordinary least squares.
-                  volby:theil_sen,orthogonal,least_sq
-                  výchozí: theil_sen
-  interpolation   Select correction parameteres interpolation method (v.surf.bspline).
-                  volby:bilinear,bicubic
-                  výchozí: bicubic
+                  values:theil_sen,orthogonal,least_sq
+                  default: theil_sen
+  interpolation   Select interpolation method (v.surf.bspline).
+                  values:bilinear,bicubic
+                  default: bicubic
        lambda_i   Tykhonov regularization parameter (v.surf.bspline)
-                  výchozí: 0.1
+                  default: 0.1
 ```
