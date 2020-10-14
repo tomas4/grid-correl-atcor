@@ -1,5 +1,5 @@
 # grid-correl-atcor
-Set of scripts for spatially-variable radiometric normalization of satellite imagery.
+Set of scripts for spatially-variable radiometric normalization of satellite imagery. Please note: *this code repositiry is not yet complete*.
 # The scripts
 ## i.grid.correl.atcor.py
 Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface. 
