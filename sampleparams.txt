@@ -1,0 +1,8 @@
+# EDIT THE USER SETTINGS BELOW, KEEPING THE SHELL SYNTAX
+# This example file supposes you place it within the directory containing the L2A 20m multiband .img and L2A watermask created with L2A_vrt-img.sh and that the points file is located elsewhere. Path names of files used  have to be absolute or relative to this parameters text file path.
+
+INPUT=T33UWR_20200821T100559_20m.img
+WMASK=T33UWR_20200821T100559_water_mask_20m.img
+POINTS="/home/tom/Dropbox/Vzorkovani2020/2020-08-20_R022_S2B(2)/waypoints_2020-08-20.shp"
+RADIUS=35
+
