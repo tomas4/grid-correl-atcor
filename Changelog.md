@@ -1,4 +1,6 @@
-# Changelog
+Changelog
+
+# Changelog of i.grid.correl.atcor.py
 
 **DATE: (future release)
 VERSION: (target 0.93b)**
