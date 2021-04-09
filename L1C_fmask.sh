@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# L2A_fmask - Take directory.SAFE with Sentinel-2 L2A SAFE and create cloud mask using FMASK. Resulting raster would be named like this: T33UWR_20210306T100029_cloud_fmask_20m.img (where T33UWR is granule name and  and in the directory where directory.SAFE resides. STANDARD NAMING OF FILES DOWNLOADED FROM COPERNICUS OPEN DATA HUB IS SUPPOSED.
+# L1C_fmask.sh - Take directory.SAFE with Sentinel-2 L1A SAFE image and create cloud mask using FMASK. Resulting raster would be named like this: T33UWR_20210306T100029_cloud_fmask_20m.img (where T33UWR is granule name and  and in the directory where directory.SAFE resides. STANDARD NAMING OF FILES DOWNLOADED FROM COPERNICUS OPEN DATA HUB IS SUPPOSED.
 #
 # For newest version visit http://
 #
@@ -20,7 +20,7 @@ MR="/usr/local/MATLAB/MATLAB_Runtime/v96"
 #GNU sed utility command (mostly sed, but may be gsed on Mac and BSD)
 SED="sed"
 #Processing directory 
-#(FMASK is sensitive to directory structure depth, so it should be relatively short path, like /home/user or /tmp, but with enough free space, about 2GB or few MB more than the size of unpacked L1C SAFE directory. Note that the processing goes on copy of the original data)
+#(FMASK is sensitive to directory structure depth, so it should be relatively short path, like /home/user or /tmp, with enough free space, about 2GB or about 100 MB more than the size of unpacked L1C SAFE directory. Note that the processing goes on copy of the original data)
 PROC_DIR=$HOME
 ######################################################################
 
@@ -120,36 +120,37 @@ TheDir=$(dirname "$TheInput")
 #size=$(du -s $TheInput | cut -f1)
 #space=$(df )#### FINISH
 
-if [ -e $TheDir/${BNAME}_Fmask4.img -a -z "$OverWrite" ]; then
-	echo "${BName}_cloud_fmask_20m.tif already present, skipping."
-else
-    # Copy product to $PROC_DIR
-    cp -r $TheInput $PROC_DIR || echo "Something went wrong, check the $PROC_DIR has more than $(du -hs $TheInput) free space) and is writable. Also check for partially copied product $TheProduct in $PROC_DIR and eventually delete it."
-    cd $PROC_DIR
+# Copy product to $PROC_DIR
+cp -r -n $TheInput $PROC_DIR || { echo "Something went wrong, check the $PROC_DIR has more than $(du -hs $TheInput) free space) and is writable. Also check for partially copied product $TheProduct in $PROC_DIR and eventually delete it." && exit 1; }
 
-    # Granule data path (GrnDataPath) = the path to directry, where MTD_TL.xml is residing
-    GrnDataPath=$(dirname "${TheProduct}/GRANULE/"[SL]*${TILE}*/MTD_TL.xml)
-    # BName = base of the name of granule image data band, i.e. the part of the filename from the start of the name, which does not change for different bands and resolutions. It is used as the base of output file name
-    BName="$(basename ${GrnDataPath}/IMG_DATA/R60m/*_B02_60m.jp2)"
-    BName="${BName%_B02_60m.jp2}"
-    #Create the 20m cloud mask (0-cloud,1-valid pixel,null-no data)
-    #Create alternative cloudmask using FMASK algorithm. Also masks out cloud shadow, snow and nodata pixels. It does *not* mask out thin cirrus clouds.
-    echo "Creating cloud mask file (20m)"
-	cd "$GrnDataPath"
-    # Set environment for FMASK and MATLAB
-    export XAPPLRESDIR=${MR}/X11/app-defaults
-    export LD_LIBRARY_PATH=${MR}/runtime/glnxa64:${MR}/bin/glnxa64:${MR}/sys/os/glnxa64:${MR}/sys/opengl/lib/glnxa64
-    $FMASK_RUN
-    # Copy result to $TheDir, converting it to HFA .img.
-    echo "Creating output ${BNAME}_Fmask4.img"
-    gdal_calc.py --format=HFA --co=COMPRESSED=YES --co=NBITS=1 -A FMASK_DATA/L1C_${TILE}_*_Fmask4.tif --outfile=$TheDir/${BNAME}_Fmask4.img --calc="A<2" --overwrite
-    # Clean the working copy of data in $PROC_DIR
-    cd $PROC_DIR
-    echo "All done. The script created a working copy of the input data folder in $(pwd):"
+cd $PROC_DIR
+# Granule data path (GrnDataPath) = the path to directry, where MTD_TL.xml is residing
+GrnDataPath=$(dirname "${TheProduct}/GRANULE/"[SL]*${TILE}*/MTD_TL.xml)
+# BName = base of the name of granule image data band, i.e. the part of the filename from the start of the name, which does not change for different bands and resolutions. It is used as the base of output file name
+BName="$(basename ${GrnDataPath}/IMG_DATA/*_B01.jp2)"
+BName="${BName%_B01.jp2}"
+#Create the 20m cloud mask (0-cloud,1-valid pixel,null-no data)
+#Create alternative cloudmask using FMASK algorithm. Also masks out cloud shadow, snow and nodata pixels. It does *not* mask out thin cirrus clouds.
+cd "$GrnDataPath"
+# Set environment for FMASK and MATLAB
+export XAPPLRESDIR=${MR}/X11/app-defaults
+export LD_LIBRARY_PATH=${MR}/runtime/glnxa64:${MR}/bin/glnxa64:${MR}/sys/os/glnxa64:${MR}/sys/opengl/lib/glnxa64
+$FMASK_RUN
+# Copy result to $TheDir, converting it to HFA .img.
+echo "Creating output ${BName}_Fmask4.img"
+gdal_calc.py --format=HFA --co=COMPRESSED=YES --co=NBITS=1 -A FMASK_DATA/L1C_${TILE}_*_Fmask4.tif --outfile=$TheDir/${BName}_Fmask4.img --calc="A<2" --overwrite
+# Clean the working copy of data in $PROC_DIR
+cd $PROC_DIR
+if [ $PROC_DIR = $(pwd) ]
+then
+    echo "$TheDir/${BName}_Fmask4.img created. The script created a working copy of the input data folder in $(pwd):"
     echo $TheProduct
     echo "To delete it, press Y key as YES (or your language equivalent, if set), any other key to preserve it."
     rm -rI $TheProduct
-fi
+ else
+    echo "Product was created in $TheDir/${BName}_Fmask4.img, but it seems changing directory into the $PROC_DIR was not successfull. Please remove the working copy of L1C data in $PROC_DIR/$TheProduct manually."
+ fi
+
 
 
 
