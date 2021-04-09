@@ -138,7 +138,7 @@ export LD_LIBRARY_PATH=${MR}/runtime/glnxa64:${MR}/bin/glnxa64:${MR}/sys/os/glnx
 $FMASK_RUN
 # Copy result to $TheDir, converting it to HFA .img.
 echo "Creating output ${BName}_Fmask4.img"
-gdal_calc.py --format=HFA --co=COMPRESSED=YES --co=NBITS=1 -A FMASK_DATA/L1C_${TILE}_*_Fmask4.tif --outfile=$TheDir/${BName}_Fmask4.img --calc="A<2" --overwrite
+gdal_calc.py --format=HFA --co=COMPRESSED=YES --co=NBITS=1 -A FMASK_DATA/*_Fmask4.tif --outfile=$TheDir/${BName}_Fmask4.img --calc="A<2" --overwrite
 # Clean the working copy of data in $PROC_DIR
 cd $PROC_DIR
 if [ $PROC_DIR = $(pwd) ]
