@@ -58,7 +58,7 @@ Runtime switches:
 
 You can also drop the input file/directory to process on the script icon in GUI. The files will be generated where the input is stored. Existing output files creation is skipped, unless the --overwrite switch is used.
  
-$SCRIPT_NAME - Script to take zip file with Sentinel-2 L2A SAFE $TILE imagery, unzip it and create .VRT and .IMG files for all resolution image bands for that tile (for other tile than $TILE - edit the USER VARIABLES in the script). 
+$SCRIPT_NAME - Script to take .SAFE folder (or .zip file containing it) with Sentinel-2 L1C imagery and create cloud mask using FMASK. Resulting raster would be named like this: ${TILE}_20210306T100029_cloud_fmask_20m.img. ${TILE} is granule (tile) name currently set for processing, for other granule edit the user settings within the script. STANDARD NAMING OF FILES DOWNLOADED FROM COPERNICUS OPEN DATA HUB IS SUPPOSED. 
           This instance invoked as ${0}
  
 OPTIONS
@@ -116,33 +116,39 @@ TheProduct=$(basename "$TheInput")
 # path to the directory containing .SAFE directory
 TheDir=$(dirname "$TheInput")
 
-# Check free space in $PROC_DIR
-size=$(du -s $TheInput | cut -f1)
-space=$(df
-# Copy product to $PROC_DIR
-cp -r $TheInput $PROC_DIR || echo "Something went wrong, check the $PROC_DIR has more than $(du -hs $TheInput) free space) and is writable. Also check for partially copied product $TheProduct in $PROC_DIR and eventually delete it."
-cd $PROC_DIR
+#### TODO Check free space in $PROC_DIR
+#size=$(du -s $TheInput | cut -f1)
+#space=$(df )#### FINISH
 
-# Granule data path (GrnDataPath) = the path to directry, where MTD_TL.xml is residing
-GrnDataPath=$(dirname "${TheProduct}/GRANULE/"[SL]*${TILE}*/MTD_TL.xml)
-# BName = base of the name of granule image data band, i.e. the part of the filename from the start of the name, which does not change for different bands and resolutions. It is used as the base of output file name
-BName="$(basename ${GrnDataPath}/IMG_DATA/R60m/*_B02_60m.jp2)"
-BName="${BName%_B02_60m.jp2}"
-
-
-#Create the 20m cloud mask (0-cloud,1-valid pixel,null-no data)
-#Create alternative cloudmask using FMASK algorithm. ###??? Also masks out snow,nodata,saturated and defect pixels.
-if [ -e ${BName}_cloud_fmask_20m.tif -a -z "$OverWrite" ]; then
+if [ -e $TheDir/${BNAME}_Fmask4.img -a -z "$OverWrite" ]; then
 	echo "${BName}_cloud_fmask_20m.tif already present, skipping."
 else
-	echo "Creating cloud mask file (20m)"
-	# DEVNOTE: nullmask is needed here to produce nodata area
-    cd "$GrnDataPath"
+    # Copy product to $PROC_DIR
+    cp -r $TheInput $PROC_DIR || echo "Something went wrong, check the $PROC_DIR has more than $(du -hs $TheInput) free space) and is writable. Also check for partially copied product $TheProduct in $PROC_DIR and eventually delete it."
+    cd $PROC_DIR
+
+    # Granule data path (GrnDataPath) = the path to directry, where MTD_TL.xml is residing
+    GrnDataPath=$(dirname "${TheProduct}/GRANULE/"[SL]*${TILE}*/MTD_TL.xml)
+    # BName = base of the name of granule image data band, i.e. the part of the filename from the start of the name, which does not change for different bands and resolutions. It is used as the base of output file name
+    BName="$(basename ${GrnDataPath}/IMG_DATA/R60m/*_B02_60m.jp2)"
+    BName="${BName%_B02_60m.jp2}"
+    #Create the 20m cloud mask (0-cloud,1-valid pixel,null-no data)
+    #Create alternative cloudmask using FMASK algorithm. Also masks out cloud shadow, snow and nodata pixels. It does *not* mask out thin cirrus clouds.
+    echo "Creating cloud mask file (20m)"
+	cd "$GrnDataPath"
     # Set environment for FMASK and MATLAB
     export XAPPLRESDIR=${MR}/X11/app-defaults
     export LD_LIBRARY_PATH=${MR}/runtime/glnxa64:${MR}/bin/glnxa64:${MR}/sys/os/glnxa64:${MR}/sys/opengl/lib/glnxa64
     $FMASK_RUN
-    #DEVNOTE: copy result to $TheDir, convert to mask, clean
+    # Copy result to $TheDir, converting it to HFA .img.
+    echo "Creating output ${BNAME}_Fmask4.img"
+    gdal_calc.py --format=HFA --co=COMPRESSED=YES --co=NBITS=1 -A FMASK_DATA/L1C_${TILE}_*_Fmask4.tif --outfile=$TheDir/${BNAME}_Fmask4.img --calc="A<2" --overwrite
+    # Clean the working copy of data in $PROC_DIR
+    cd $PROC_DIR
+    echo "All done. The script created a working copy of the input data folder in $(pwd):"
+    echo $TheProduct
+    echo "To delete it, press Y key as YES (or your language equivalent, if set), any other key to preserve it."
+    rm -rI $TheProduct
 fi
 
 
