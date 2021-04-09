@@ -1,25 +1,7 @@
 Changelog
 
-# Changelog of i.grid.correl.atcor.py
-
-**DATE: (future release)
-VERSION: (target 0.93b)**
-
-**New features:**
-
-*THIS IS CURRENTLY NOT IN SYNC WITH CHANGES ALREADY IMPLEMENTED/INCOMPLETE*
-- Internal change of temporary files naming - now the names contain input file name. It allows for example to use loops over bands of an image and keep the temporary files for every band with the -k flag.
-- Theil-Sen regression - (EXPERIMENTAL) regression robust to both x- and y- line noise and outliers - should enhance the results in case of imperfect cloud and other change areas masking considerably. Note that it can be computer-intensive, especially has high memory requirements - if it fails because of low memory, reduce tile size. NOTE: In reality this regression does not work as expected so far. Probably usable only in special cases.
-- In case there is no tile with good correlation, a warning message is isuued and the source band is copied to output as is. 
-- (PLANNED: The center points for regression parameters interpolation should not be in the center of every tile, but in the center of gravity of valid pixels in the tile. It should improve the resulting correction precision.)
-- Added -v (verbose) switch.
-
-**Formal improvements:**
-
-- Information messages now contain the input file name and mapset path in the first few lines.
-- When processing tiles, the information messages about series of skipped tiles were aggregated into one summary message.
-- Small changes in formulation of GUI and messages texts.
-- (distribution) Created github project https://github.com/tomas4/grid-correl-atcor, all this and future releases can be found there.
+# Changelog of i.grid.correl.atcor.py releases
+Previous releases below were published via Dropbox (see download links below). Following releases would be released in github project https://github.com/tomas4/grid-correl-atcor together with complementary scripts.
 
 **DATE: 2015-07-23
 VERSION: 0.92b**
