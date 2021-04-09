@@ -83,6 +83,7 @@ PARAMETERS
 * * *
 ## L2A_vrt-img.sh
 Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .vrt and .img files for all resolution image bands for that tile. Also creates files that can help with change detection and water/clouds/vegetation indices or masks.
+Before first use make sure to edit user settings directly within the code.
 
 ### Synopsis
 ```
