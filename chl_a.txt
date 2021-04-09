@@ -1,0 +1,24 @@
+# EDIT THE USER SETTINGS BELOW, KEEPING THE SHELL SYNTAX
+# Save the file with the input data, from there you run the L2A_modelapp.sh script.
+
+# Path name of bands used in the formula (absolute or relative). In case of multiband files it is normal that two variables point to the same file, these are distinguished by the band number. You can add or remove variables named A B C D... and ABAND BBAND CBAND DBAND... etc as needed in the formula
+
+A="T33UWR_20190725T100039_20m.vrt"
+ABAND=4
+
+B="T33UWR_20190725T100039_20m.vrt"
+BBAND=3
+
+C="T33UWR_20190725T100039_water_mask_20m.tif"
+CBAND=1
+
+OUTPUT="chla_20190725_test.tif"
+
+# Formula to use
+FORMULA="(59.1770*(A/B)*(A/B)-77.2041*(A/B)+23.2527)/C"
+
+###########################################
+
+
+
+

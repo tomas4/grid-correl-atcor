@@ -44,7 +44,7 @@ Parameters:
        lambda_i   Tykhonov regularization parameter (v.surf.bspline)
                   default: 0.1
 ```
-
+* * *
 ## L2A_grass_atcor.sh
 This Bash script allows using the script *i.grid.correl.atcor.py* on Sentinel-2 imagery without starting grass manually and process the whole set of bands of L2A Sentinel-2 product in one run. It needs set of input files created using *L2A_vrt-img.sh* script and the reference file already stored in PERMANENT mapset of the location used. Before first use make sure to edit user settings directly within the code.
 ### Synopsis
@@ -79,5 +79,35 @@ PARAMETERS
 		help run 'i.grid.correl.atcor.py --help' within a GRASS GIS 
 		session.
 
+```
+* * *
+## L2A_vrt-img.sh
+Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .vrt and .img files for all resolution image bands for that tile. Also creates files that can help with change detection and water/clouds/vegetation indices or masks.
+
+### Synopsis
+```
+Usage:                L2A_vrt-img.sh [-o] <Input SAFE format directory or zip archive>
+To get help:          L2A_vrt-img.sh -h
+To get version info:  L2A_vrt-img.sh -v
+
+Runtime switches:
+-o, --overwrite		Overwrite existing files
+
+You can also drop the input file/directory to process on the script icon in GUI. The files will be generated where the input is stored. Existing output files creation is skipped, unless the --overwrite switch is used.
+ 
+L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .VRT and .IMG files for all resolution image bands for that tile (for other tile than T33UWR - edit the USER VARIABLES in the script). 
+          This instance invoked as /home/tom/scripts/L2A_vrt-img.sh
+```
+* * *
+## L2A_modelapp.sh
+This script will apply a model of water quality on Sentinel-2 img or vrt file created with script L2A_vrt_img.sh or L2A_grass_atcor.sh and computes water quality parameter in visible water areas. Sample parameters file is supplied as chl-a.txt.
+
+### Synopsis
+```
+Usage:                L2A_modelapp.sh <parameters file>
+To get help:          L2A_modelapp.sh -h
+To get version info:  L2A_modelapp.sh -v
+
+L2A_modelapp.sh - NON-INTERACTIVE script to apply a water quality model on Sentinel-2 satellite level-2 data preprocessed with L2A_vrt-img script. EDIT THE <parameters file> FIRST. Output would be created in current directory. 
 ```
 ## THIS README FILE IS NOT YET COMPLETE 
