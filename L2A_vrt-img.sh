@@ -102,7 +102,7 @@ command -v gdal_translate >/dev/null 2>&1 || { echo >&2 "I require gdal_translat
 command -v basename >/dev/null 2>&1 || { echo >&2 "I require basename but it's not installed. Please install core linux utilities (coreutils package or similar).  Aborting."; exit 1; }
 command -v dirname >/dev/null 2>&1 || { echo >&2 "I require dirname but it's not installed. Please install core linux utilities (coreutils package or similar).  Aborting."; exit 1; }
 command -v $SED >/dev/null 2>&1 || { echo >&2 "I require gnu sed but it's not installed. Please install gnu sed (package sed, gnu-sed, gsed or similar).  Aborting."; exit 1; }
-SetBN=$(command -v set_band_desc.py) || { echo >&2 "WARNING: Python script set_band_desc.py needed to set band names, but it was not found in the PATH. Band names won't be set."; }
+SetBN=$(command -v set_band_desc.py) || { echo >&2 "WARNING: Python script set_band_desc.py needed to set band names, but it was not found in the PATH. Band names won't be set.  You can get the script from https://gis.stackexchange.com/questions/290796/how-to-edit-the-metadata-for-individual-bands-of-a-multiband-raster-preferably/290806#290806"; }
 
 # Input names
 TheProduct=$(basename "$TheInput")
