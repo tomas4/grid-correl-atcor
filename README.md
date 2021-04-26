@@ -1,12 +1,12 @@
 README
 
 # grid-correl-atcor
-Set of scripts for spatially-variable radiometric normalization of satellite imagery. Please note: **This code repository is not yet complete. The scripts presented are minimally tested and under deveopment.** Older releases of i.grid.correl.atcor.py with some additional documentation can be found at: [This Dropbox link](https://www.dropbox.com/s/st5b4p5nkmn8t3k/i.grid.correl.atcor.html?dl=0).
+Set of scripts for spatially-variable radiometric normalization of satellite imagery. Please note: **This code repository is not yet complete. The scripts presented are minimally tested and under deveopment.** 
 # The scripts
 ## i.grid.correl.atcor.py
 Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface. 
 ### Installation and initialization
-For starting it in GUI mode from the GRASS GIS menu anytime, and also for initial registration of the script within your GRASS GIS, save it somewhere (preferably in some directory you intend for storing also other third-party GRASS scripts) and run it using the GRASS menu *File / Launch Script*. From now on, it is added into that GRASS GIS installation PATH, so you can use its name on the commnad-line, for example to do a loop over all bands of a satellite image imported into GRASS working mapset.
+For starting it in GUI mode from the GRASS GIS menu anytime, and also for initial registration of the script within your GRASS GIS, save it somewhere (preferably in some directory you intend for storing also other third-party GRASS scripts) and run it using the GRASS menu *File / Launch Script*. From now on, it is added into that GRASS GIS user search PATH, so you can use its name on the commnad-line, for example to do a loop over all bands of a satellite image imported into GRASS working mapset.
 ### Basic principle
 To achieve its purpose, that is to do the radiometric normalization in spatially-variable manner, it processes the input raster per tiles. In every tile, the correlation coeffitient *r* between the input and reference image is computed for every tile, and if it is better than the minimum and number of valid (ie. pseudo/invariant) pixels is over the minimum, linear regression slope *b* and intercept *a* between reference and input image tiles are computed. The slope and intercept are then interpolated over the whole area of the image. The slope and intercept rasters are then used to compute corrected raster band.
 Before the linear regression computation, the image should be masked, so that only the so called pseudo-invariant area pixels are used for the computation. It is user's responsibility to provide the required masks (but the other scripts in the set are here to help with that).
@@ -44,6 +44,7 @@ Parameters:
        lambda_i   Tykhonov regularization parameter (v.surf.bspline)
                   default: 0.1
 ```
+*Older releases of i.grid.correl.atcor.py with some additional documentation can be found at: [This Dropbox link](https://www.dropbox.com/s/st5b4p5nkmn8t3k/i.grid.correl.atcor.html?dl=0). (No sign-up required, just close the pop up, but due to changes in Dropbox site you now need to download the html file and open it in browser for it to be rendered.)*
 * * *
 ## L2A_grass_atcor.sh
 This Bash script allows using the script *i.grid.correl.atcor.py* on Sentinel-2 imagery without starting grass manually and process the whole set of bands of L2A Sentinel-2 product in one run. It needs set of input files created using *L2A_vrt-img.sh* script and the reference file already stored in PERMANENT mapset of the location used. Before first use make sure to edit user settings directly within the code.
