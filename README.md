@@ -47,7 +47,7 @@ Parameters:
 *Older releases of i.grid.correl.atcor.py with some additional documentation can be found at: [This Dropbox link](https://www.dropbox.com/s/st5b4p5nkmn8t3k/i.grid.correl.atcor.html?dl=0). (No sign-up required, just close the pop up, but due to changes in Dropbox site you now need to download the html file and open it in browser for it to be rendered.)*
 * * *
 ## L2A_grass_atcor.sh
-This Bash script allows using the script *i.grid.correl.atcor.py* on Sentinel-2 imagery without starting grass manually and process the whole set of bands of L2A Sentinel-2 product in one run. It needs set of input files created using *L2A_vrt-img.sh* script and the reference file already stored in PERMANENT mapset of the location used. Before first use make sure to edit user settings directly within the code.
+This Bash script allows using the script *i.grid.correl.atcor.py* on Sentinel-2 imagery without starting grass manually and process the whole set of bands of L2A Sentinel-2 product in one run. It needs set of input files created using *L2A_vrt-img.sh* script and the reference image already stored in PERMANENT mapset of the location used. Before first use make sure to edit user settings directly within the code.
 ### Synopsis
 ```
 Usage:  
