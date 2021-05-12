@@ -101,5 +101,27 @@ L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery
           This instance invoked as /home/tom/scripts/L2A_vrt-img.sh
 ```
 
+## r.buff.cloudmask.py
+Script to despeckle and buffer sloud mask derived from SCL classification (or other cloud mask containing artifacts in form of misclassified small few pixel clouds). The buffering is there to mask out also areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
 
+### Synopsis
+```
+Script to grow zero value (cloudy) regions in a cloud mask band.
+
+Usage:
+ r.buff.cloudmask.py input=string [clmask=name] [output=name]
+   [buffsize=value] [circlesize=value] [--overwrite] [--help] [--verbose]
+   [--quiet] [--ui]
+
+Flags:
+
+Parameters:
+       input   Select the mask raster to be buffered.
+      clmask   Name of output cleared mask raster. Leave empty and input name with suffix _clean<size> will be used.
+      output   Name of output cleared and buffered raster. Leave empty and input name with suffix _buff<size> will be used.
+    buffsize   Buffer size in meters.
+               default: 300
+  circlesize   Size of moving window circular area to filter out few pixel-sized clouds and holes. The value must be an odd number >= 3.
+               default: 9
+```
 ## THIS README FILE IS NOT YET COMPLETE 
