@@ -109,7 +109,7 @@ You can also drop the input file/directory to process on the script icon in GUI.
 L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .VRT and .IMG files for all resolution image bands for that tile (for other tile than T33UWR - edit the USER VARIABLES in the script). 
           This instance invoked as /home/tom/scripts/L2A_vrt-img.sh
 ```
-
+***
 ## r.buff.cloudmask.py
 Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there to mask out also areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
 See *i.grid.correl.atcor.py* for installation instructions.
@@ -134,7 +134,7 @@ Parameters:
   circlesize   Size of moving window circular area to filter out few pixel-sized clouds and holes. The value must be an odd number >= 3.
                default: 9
 ```
-
+***
 ## L1C_fmask.sh
 Simple wrapper script for [FMASK](https://github.com/gersl/fmask) algorithm to create alternative cloud mask to that created by *L2A_vrt_img.sh* from level-2 scene classification of Sentinel-2 imagery. Note that you need FMASK4.x installation (tested with FMASK 4.3) and have to edit the user settings within the *L1C_fmask.sh* file. Also note that you need Level-1C Sentinel-2 image, not Level-2A in this case. In many cases the FMASK 4.3 based cloudmask is higher quality than L2A SCL based cloudmask. To use the resulting cloudmask by the *L2A_grid_atcor.sh* script, make backup of the *L2A_vrt_img.sh* created cloudmask file and rename the FMASK based cloudmask exactly as L2A SCL based cloudmask was named.
 
