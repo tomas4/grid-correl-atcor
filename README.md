@@ -112,6 +112,7 @@ L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery
 
 ## r.buff.cloudmask.py
 Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there to mask out also areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
+See *i.grid.correl.atcor.py* for installation instructions.
 
 ### Synopsis
 ```
@@ -133,4 +134,23 @@ Parameters:
   circlesize   Size of moving window circular area to filter out few pixel-sized clouds and holes. The value must be an odd number >= 3.
                default: 9
 ```
-## THIS README FILE IS NOT YET COMPLETE 
+
+## L1C_fmask.sh
+Simple wrapper script for [FMASK](https://github.com/gersl/fmask) algorithm to create alternative cloud mask to that created by *L2A_vrt_img.sh* from level-2 scene classification of Sentinel-2 imagery. Note that you need FMASK4.x installation (tested with FMASK 4.3) and have to edit the user settings within the *L1C_fmask.sh* file. Also note that you need Level-1C Sentinel-2 image, not Level-2A in this case. In many cases the FMASK 4.3 based cloudmask is higher quality than L2A SCL based cloudmask. To use the resulting cloudmask by the *L2A_grid_atcor.sh* script, make backup of the *L2A_vrt_img.sh* created cloudmask file and rename the FMASK based cloudmask exactly as L2A SCL based cloudmask was named.
+
+### Synopsis
+```
+Usage:                L1C_fmask.sh [-o] <Input SAFE format directory or zip archive>
+To get help:          L1C_fmask.sh -h
+To get version info:  L1C_fmask.sh -v
+
+Runtime switches:
+-o, --overwrite		Overwrite existing files
+
+You can also drop the input file/directory to process on the script icon in GUI. The files will be generated where the input is stored. Existing output files creation is skipped, unless the --overwrite switch is used.
+ 
+L1C_fmask.sh - Script to take .SAFE folder (or .zip file containing it) with Sentinel-2 L1C imagery and create cloud mask using FMASK. Resulting raster would be named like this: T33UWR_20210306T100029_cloud_fmask_20m.img. T33UWR is granule (tile) name currently set for processing, for other granule edit the user settings within the script. STANDARD NAMING OF FILES DOWNLOADED FROM COPERNICUS OPEN DATA HUB IS SUPPOSED. 
+          This instance invoked as /home/tom/scripts/L1C_fmask.sh
+
+```
+
