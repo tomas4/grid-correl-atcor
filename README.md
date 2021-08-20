@@ -111,7 +111,7 @@ L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery
 ```
 ***
 ## r.buff.cloudmask.py
-Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there to mask out also areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
+Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there also to mask out areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
 See *i.grid.correl.atcor.py* for installation instructions.
 
 ### Synopsis
