@@ -2,6 +2,8 @@ README
 
 # grid-correl-atcor
 Set of scripts for spatially-variable radiometric normalization of satellite imagery and preparation of Sentinel-2 L2A imagery for use in GIS. The scripts named L2A_*.sh work specifically with Sentinel-2 Level-2A imagery, while the scripts i.grid.correl.atcor.py and r.buff.cloudmask.py can be used on raster data from various sources. Please note: **This code repository is not yet complete. The scripts presented are minimally tested and under development.** 
+
+**\[BUG\] Please note, that L2A scripts are affected by change in Sentinel-2 L2 imagery processing, making it unsuitable for latest imagery. See the corresponding [issue](https://github.com/tomas4/grid-correl-atcor/issues/2) for details and interim workaround.**
 # The scripts
 ## i.grid.correl.atcor.py
 Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface. 
