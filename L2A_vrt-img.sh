@@ -5,7 +5,8 @@
 # For newest version visit http://
 #
 # CREDITS:
-# 
+# Users https://stackoverflow.com/users/312866/yuzem and https://stackoverflow.com/users/482494/chad
+# for the function to read xml values and its explanation
 #
 # Have fun!
 # Tomas IV. (Tomas Brunclik, brunclik@atlas.cz)
@@ -17,6 +18,7 @@ TILE="T33UWR"
 EPSG="32633"
 #GNU sed utility command (mostly sed, but may be gsed on Mac and BSD)
 SED="sed"
+
 ######################################################################
 
 
@@ -65,6 +67,12 @@ fi
 ## Functions
 #function name () { list; } [redirection]
 
+# Function to read xml file and for tags <entity>content</entity> create $ENTITY $CONTENT variables
+# should be used in loop to read all of the xml file, borrowed from https://stackoverflow.com/a/7052168
+read_xml () {
+    local IFS=\>
+    read -d \< ENTITY CONTENT
+}
 
 ## Main program
 
@@ -97,6 +105,8 @@ done
 
 # Check presence of tools needed
 command -v unzip >/dev/null 2>&1 || { echo >&2 "I require unzip but it's not installed. Please install unzip. Aborting."; exit 1; }
+command -v bc >/dev/null 2>&1 || { echo >&2 "I require bc but it's not installed. Please install GNU bc ( package bc or similar). Aborting."; exit 1; }
+command -v gdal_edit.py >/dev/null 2>&1 || { echo >&2 "I require gdal_edit.py but it's not installed. Please install gdal tools (gdal-bin package or similar). Aborting."; exit 1; }
 command -v gdalbuildvrt >/dev/null 2>&1 || { echo >&2 "I require gdalbuildvrt but it's not installed. Please install gdal tools (gdal-bin package or similar). Aborting."; exit 1; }
 command -v gdal_translate >/dev/null 2>&1 || { echo >&2 "I require gdal_translate but it's not installed. Please install gdal tools (gdal-bin package or similar).  Aborting."; exit 1; }
 command -v basename >/dev/null 2>&1 || { echo >&2 "I require basename but it's not installed. Please install core linux utilities (coreutils package or similar).  Aborting."; exit 1; }
@@ -127,23 +137,82 @@ BName="${BName%_B02_60m.jp2}"
 
 
 #Create the outputs
+shopt -s extglob
 for res in 60 20 10; do
+  case $res in
+    10)
+        BANDMASK="*_B@(02|03|04|08)_10m.jp2"
+        ;;
+    20)
+        BANDMASK="*_B@(02|03|04|05|06|07|11|12|8A)_20m.jp2"
+        ;;
+    60)
+        BANDMASK="*_B@(01|02|03|04|05|06|07|09|11|12|8A)_60m.jp2"
+        ;;
+  esac  
+
   if [ -e ${BName}_${res}m.vrt -a -z "$OverWrite"  ]; then
-  	  echo "${BName}_${res}m.vrt already present, skipping."
+  	echo "${BName}_${res}m.vrt already present, skipping."
   else
-	  echo "Generating ${BName}_${res}m.vrt"
-	  gdalbuildvrt -separate -a_srs epsg:$EPSG -srcnodata 0 -vrtnodata 0 "${BName}_${res}m.vrt" ${ImgDataPath}/R${res}m/*_B??_${res}m.jp2
-	  #Convert the virtual raster to Float32 to support GDAL floating point arithmetics (MNDWI etc. later on in this file).
-	  echo "Setting ${BName}_${res}m.vrt to Float32 type"
-	  $SED -i 's/UInt16/Float32/gI'  "${BName}_${res}m.vrt"
+    # Actually create the .vrt - note it would have raw quantized reflectance values and quantization/offset not defined
+    echo "Generating ${BName}_${res}m.vrt"  
+    gdalbuildvrt -separate -a_srs epsg:$EPSG -srcnodata 0 -vrtnodata 0 "${BName}_${res}m.vrt" ${ImgDataPath}/R${res}m/$BANDMASK
+
+    # TODO: Check and fix corner coordinates
+
+    #Get the (processing baseline 4.00 and up) offset BOA_ADD_OFFSET, if present in the MTD_MSIL2A.xml and the quantificaton factor BOA_QUANTIFICATION_VALUE
+    # defaults for older datasets
+    BOAOFFSET=0
+    BOAQUANTIFICATION=10000
+
+    #Read the offset and quantification factor from L2A xml
+    if [ -e S2*L2A*.SAFE/*MTD*L2A*.xml ]; then
+    XMLINPUT="S2*L2A*.SAFE/*MTD*L2A*.xml"
+    while read_xml; do
+        if [[ $ENTITY = "BOA_QUANTIFICATION_VALUE unit=\"none\"" ]] ; then
+            BOAQUANTIFICATION=$CONTENT
+        fi
+        if [[ $ENTITY = "L2A_BOA_QUANTIFICATION_VALUE unit=\"none\"" ]] ; then
+            BOAQUANTIFICATION=$CONTENT
+        fi
+        if [[ $ENTITY = "BOA_ADD_OFFSET band_id=\"0\"" ]] ; then
+            BOAOFFSET=$CONTENT
+        fi
+    done < $XMLINPUT
+    echo "Quantized BOA reflectance offset is: $BOAOFFSET"
+    echo "BOA quantification factor is: $BOAQUANTIFICATION"
+    else
+    echo "Warning: L2A metadadata XML file not found in the .SAFE directory. Supposing the BOA offset is $BOAOFFSET and BOA quantification factor is $BOAQUANTIFICATION."
+    fi
+      
+      
+    # Apply the offset and quantification factor in the .vrt file
+    echo "Applying the offset and quantification to ${BName}_${res}m.vrt"
+    #When applied both to remove quantification, THE BOA QUANTIFICATION MUST BE INVERTED (10^4 --> 10^-4), THE BOA OFFSET MULTIPLIED BY THE INVERTED QUANTIFICATION (10^3*10^-4 = 10^-1)
+    quantification=$(echo "scale=5; 1/$BOAQUANTIFICATION" | bc -q)
+    offset=$(echo "scale=5; $BOAOFFSET/$BOAQUANTIFICATION" | bc -q)
+    gdal_edit.py -scale $quantification -offset $offset "${BName}_${res}m.vrt"
+
+    #Works, but what about using gdal_edit.py instead, as it can change even existing, but incorrect value?
+    #Later, this direct use of BOAOFFSET can be utilized to create 20m legacy
+    #$SED -i "s/<NoDataValue>0<\/NoDataValue>/<NoDataValue>0<\/NoDataValue><Offset>${BOAOFFSET}.0<\/Offset>/g" "${BName}_${res}m.vrt"
+        
+
+
+      #DEVNOTE: Should not be needed, but no harm done
+      #Convert the virtual raster to Float32 to support GDAL floating point arithmetics (MNDWI etc. later on in this file).
+      echo "Setting ${BName}_${res}m.vrt to Float32 type"
+      $SED -i 's/UInt16/Float32/gI'  "${BName}_${res}m.vrt"
   fi
 
   if [ -e ${BName}_${res}m.img -a -z "$OverWrite" ]; then
-  	  echo "${BName}_${res}m.img already present, skipping."
+      echo "${BName}_${res}m.img already present, skipping."
   else
-	  echo "Generating ${BName}_${res}m.img"
-	  # Here we revert back to integer (-ot UInt16), since float would mean twice the disk space and the input in is integer in reality anyway. Use the .vrt, where float computing needs it.
-	  gdal_translate -of HFA -ot UInt16 -co COMPRESSED=YES -a_nodata 0 "${BName}_${res}m.vrt" "${BName}_${res}m.img"
+      echo "Generating ${BName}_${res}m.img"
+      # Here we revert back to integer (-ot UInt16), since float would mean twice the disk space and the input in is integer in reality anyway. Use the .vrt, where float computing needs it.
+      # DEVNOTE: removed " -a_nodata 0", since the source .vrt should have set the nodata correctly.
+      # DEVNOTE2: BUT, all the values of zero AFTER applying the offset are treated as null. Thought it should be the RAW zero value.
+      gdal_translate -of HFA -ot UInt16 -co COMPRESSED=YES "${BName}_${res}m.vrt" "${BName}_${res}m.img"
   fi
 done
 
@@ -151,20 +220,20 @@ done
 # Rename bands of the outputs (NOT possible with GDAL tools, so the python script. DEVIDEA: sed should do the job to avoid another script dependency)
 if [ -n "$SetBN" ]
 then
-	echo "Setting band names"
-	# 10m
-	$SetBN "${BName}_10m.vrt" 1 "B02" 2 "B03" 3 "B04" 4 "B08" 
-	$SetBN "${BName}_10m.img" 1 "B02" 2 "B03" 3 "B04" 4 "B08" 
-	# 20m
-	$SetBN "${BName}_20m.vrt" 1 "B02" 2 "B03" 3 "B04" 4 "B05" 5 "B06" 6 "B07" 7 "B11" 8 "B12" 9 "B8A"
-	$SetBN "${BName}_20m.img" 1 "B02" 2 "B03" 3 "B04" 4 "B05" 5 "B06" 6 "B07" 7 "B11" 8 "B12" 9 "B8A"
-	# 60m
-	$SetBN "${BName}_60m.vrt" 1 "B01" 2 "B02" 3 "B03" 4 "B04" 5 "B05" 6 "B06" 7 "B07" 8 "B09" 9 "B11" 10 "B12" 11 "B8A"
-	$SetBN "${BName}_60m.img" 1 "B01" 2 "B02" 3 "B03" 4 "B04" 5 "B05" 6 "B06" 7 "B07" 8 "B09" 9 "B11" 10 "B12" 11 "B8A"
+    echo "Setting band names"
+    # 10m
+    $SetBN "${BName}_10m.vrt" 1 "B02" 2 "B03" 3 "B04" 4 "B08" 
+    $SetBN "${BName}_10m.img" 1 "B02" 2 "B03" 3 "B04" 4 "B08" 
+    # 20m
+    $SetBN "${BName}_20m.vrt" 1 "B02" 2 "B03" 3 "B04" 4 "B05" 5 "B06" 6 "B07" 7 "B11" 8 "B12" 9 "B8A"
+    $SetBN "${BName}_20m.img" 1 "B02" 2 "B03" 3 "B04" 4 "B05" 5 "B06" 6 "B07" 7 "B11" 8 "B12" 9 "B8A"
+    # 60m
+    $SetBN "${BName}_60m.vrt" 1 "B01" 2 "B02" 3 "B03" 4 "B04" 5 "B05" 6 "B06" 7 "B07" 8 "B09" 9 "B11" 10 "B12" 11 "B8A"
+    $SetBN "${BName}_60m.img" 1 "B01" 2 "B02" 3 "B03" 4 "B04" 5 "B05" 6 "B06" 7 "B07" 8 "B09" 9 "B11" 10 "B12" 11 "B8A"
 fi
 
 #Create (possibly temporary) null mask (1-valid data, nodata-invalid data)
-#The bands juste created have value 0 set to nodata, everything else >=1. This mask would be usable just by multiplying the formula with it.
+#The bands just created have value 0 set to nodata, everything else >=1. This mask would be usable just by multiplying the formula with it.
 echo "Creating null-mask file"
 gdal_calc.py -A "${BName}_20m.img" --A_band=1 --outfile=nullmask.img --calc="(A>0)" --type=Byte --format=HFA --creation-option="NBITS=1" --creation-option="COMPRESSED=YES" --NoDataValue=0
 
@@ -173,7 +242,8 @@ if [ -e ${BName}_mndwi_20m.img -a -z "$OverWrite" ]; then
 	echo "${BName}_mndwi_20m.img already present, skipping."
 else
 	echo "Creating MNDWI file (20m)"
-	gdal_calc.py -A "${BName}_20m.vrt" --A_band=2 -B "${BName}_20m.vrt" --B_band=7 --outfile="${BName}_mndwi_20m.img" --calc="(A-B)/(A+B)" --type=Float32 --format=HFA --creation-option="COMPRESSED=YES"
+	#DEVNOTE: Added BOA offset, supposing gdal_calc works with raw pixel values (i.e. quantized BOA) instead of true unscaled BOA reflectance, as my gdal 4.2.0 does. Hopefully they won't change this in the future...
+	gdal_calc.py -A "${BName}_20m.vrt" --A_band=7 -B "${BName}_20m.vrt" --B_band=2 --outfile="${BName}_mndwi_20m.img" --calc="(maximum(B+$BOAOFFSET,1)-maximum(A+$BOAOFFSET,1))/(maximum(B+$BOAOFFSET,1)+maximum(A+$BOAOFFSET,1))" --type=Float32 --format=HFA --creation-option="COMPRESSED=YES"
 fi
 
 #Create 20m SCL VRT
@@ -217,14 +287,14 @@ then
 		echo "${BName}_water_mask_20m.img already present, skipping."
 	else
 		echo "Creating water mask (20m)"
-		gdal_calc.py -A "${BName}_mndwi_20m.img" -B "${BName}_20m.vrt" --B_band=7 -C "${BName}_cloud_mask_20m.img" --outfile="${BName}_water_mask_20m.img" --calc="(A>0.1)*(B<700)*(C>0)" --type=Byte --format=HFA --creation-option="NBITS=2" --creation-option="COMPRESSED=YES" --NoDataValue=3
+		gdal_calc.py -A "${BName}_mndwi_20m.img" -B "${BName}_20m.vrt" --B_band=7 -C "${BName}_cloud_mask_20m.img" --outfile="${BName}_water_mask_20m.img" --calc="(A>0.1)*(B<(700-$BOAOFFSET))*(C>0)" --type=Byte --format=HFA --creation-option="NBITS=2" --creation-option="COMPRESSED=YES" --NoDataValue=3
 	fi
 else
 	if [ -e ${BName}_water_mask_20m.img -a -z "$OverWrite" ]; then
 		echo "${BName}_water_mask_20m.img already present, skipping."
 	else
 		echo "Creating water mask (20m) (Cloud mask ${BName}_cloud_mask_20m.img not found)"
-		gdal_calc.py -A "${BName}_mndwi_20m.img" -B "${BName}_20m.vrt" --B_band=7 --outfile="${BName}_water_mask_20m.img" --calc="(A>0.1)*(B<700)" --type=Byte --format=HFA --creation-option="NBITS=2" --creation-option="COMPRESSED=YES" --NoDataValue=3
+		gdal_calc.py -A "${BName}_mndwi_20m.img" -B "${BName}_20m.vrt" --B_band=7 --outfile="${BName}_water_mask_20m.img" --calc="(A>0.1)*(B<(700-$BOAOFFSET))" --type=Byte --format=HFA --creation-option="NBITS=2" --creation-option="COMPRESSED=YES" --NoDataValue=3
 	fi
 fi
 #create float32 zero-turned-to-nodata virtual raster to support GDAl floating point computing of models
@@ -241,7 +311,7 @@ if [ -e ${BName}_ndmi_20m.img -a -z "$OverWrite" ]; then
 	echo "${BName}_ndmi_20m.img already present, skipping."
 else
 	echo "Creating NDMI file (20m)"
-	gdal_calc.py -A "${BName}_20m.vrt" --A_band=7 -B "${BName}_20m.vrt" --B_band=9 --outfile="${BName}_ndmi_20m.img" --calc="(B-A)/(B+A)" --type=Float32 --format=HFA --creation-option="COMPRESSED=YES"
+	gdal_calc.py -A "${BName}_20m.vrt" --A_band=7 -B "${BName}_20m.vrt" --B_band=9 --outfile="${BName}_ndmi_20m.img" --calc="(maximum(B+$BOAOFFSET,1)-maximum(A+$BOAOFFSET,1))/(maximum(B+$BOAOFFSET,1)+maximum(A+$BOAOFFSET,1))" --type=Float32 --format=HFA --creation-option="COMPRESSED=YES"
 fi
 
 #Create 20m ndvi
@@ -249,8 +319,8 @@ fi
 if [ -e ${BName}_ndvi_20m.img -a -z "$OverWrite" ]; then
 	echo "${BName}_ndvi_20m.img already present, skipping."
 else
-	echo "Creating ndvi file (20m)"
-	gdal_calc.py -A "${BName}_20m.vrt" --A_band=2 -B "${BName}_20m.vrt" --B_band=9 --outfile="${BName}_ndvi_20m.img" --calc="(maximum(B,1)-maximum(A,1))/(maximum(B,1)+maximum(A,1))" --type=Float32 --format=HFA --creation-option="COMPRESSED=YES"
+	echo "Creating NDVI file (20m)"
+	gdal_calc.py -A "${BName}_20m.vrt" --A_band=2 -B "${BName}_20m.vrt" --B_band=9 --outfile="${BName}_ndvi_20m.img" --calc="(maximum(B+$BOAOFFSET,1)-maximum(A+$BOAOFFSET,1))/(maximum(B+$BOAOFFSET,1)+maximum(A+$BOAOFFSET,1))" --type=Float32 --format=HFA --creation-option="COMPRESSED=YES"
 fi
 
 
