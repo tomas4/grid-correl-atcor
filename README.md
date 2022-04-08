@@ -3,7 +3,6 @@ README
 # grid-correl-atcor
 Set of scripts for spatially-variable radiometric normalization of satellite imagery and preparation of Sentinel-2 L2A imagery for use in GIS. The scripts named L2A_*.sh work specifically with Sentinel-2 Level-2A imagery, while the scripts i.grid.correl.atcor.py and r.buff.cloudmask.py can be used on raster data from various sources. Please note: **This code repository is not yet complete. The scripts presented are minimally tested and under development.** 
 
-**\[BUG\] Please note, that L2A scripts are affected by change in Sentinel-2 L2 imagery processing, making it unsuitable for latest imagery. See the corresponding [issue](https://github.com/tomas4/grid-correl-atcor/issues/2) for details and interim workaround.**
 # The scripts
 ## i.grid.correl.atcor.py
 Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface. 
@@ -111,6 +110,7 @@ You can also drop the input file/directory to process on the script icon in GUI.
 L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .VRT and .IMG files for all resolution image bands for that tile (for other tile than T33UWR - edit the USER VARIABLES in the script). 
           This instance invoked as /home/tom/scripts/L2A_vrt-img.sh
 ```
+**Please note, [issue 2](https://github.com/tomas4/grid-correl-atcor/issues/2) have been closed, but it brought change in values reported by QGIS - it now reports values of reflectance, numbers less than 1, while previous version reported quantized values, numbers generally in thousands. This may affect your workflows. For example if you have prepared color styles for the files, you have to rework them, or the multiband files will generally look as solid black.**
 ***
 ## r.buff.cloudmask.py
 Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there also to mask out areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
