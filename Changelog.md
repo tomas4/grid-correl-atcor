@@ -1,7 +1,7 @@
 Changelog
 
 # Changelog of i.grid.correl.atcor.py releases
-Previous releases below were published via Dropbox (see download links below). Following releases would be released in github project https://github.com/tomas4/grid-correl-atcor together with complementary scripts.
+Previous releases below were published via Dropbox (see download links below). Following releases would be released in github project https://github.com/tomas4/grid-correl-atcor together with complementary scripts. Scripts here on Github undergone substantial changes since latest Dropbox release. The chages could be tracked via Github logs now.
 
 **DATE: 2015-07-23
 VERSION: 0.92b**
