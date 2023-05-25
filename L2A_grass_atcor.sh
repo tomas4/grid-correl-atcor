@@ -14,11 +14,13 @@
 #Location full path
 THELOC="/home/tom/GISdata/grass/utm33n"
 #REFERENCE maps in PERMANENT mapset
-REFBASE="s2_20190630_20m"
-#REFCLOUDMASK="s2_20190630_20m_cloudmask"
-REFCLOUDMASK="s2_20190630_20m_1mask" #because there are no real clouds; original cloudmask has only false positives
-REFSCL="s2_20190630_20m_scl"
-REFNDMI="s2_20190630_20m_ndmi"
+# Basename of reference image bands. For example if the band names are reference.1, reference.2, ..., reference.9, then it should be REFBASE="reference"
+REFBASE="s2_20220719_20m"
+# Cloudmask of the reference image, may also mask out snow if needed. If the image is clear without any clouds and snow, just give it empty string value, ie. REFCLOUDMASK=""
+#REFCLOUDMASK="s2_20220719_20m_1mask"
+REFCLOUDMASK="" 
+REFSCL="s2_20220719_20m_scl"
+REFNDMI="s2_20220719_20m_ndmi"
 # The GRASS command
 GRASSCMD=/usr/bin/grass
 #GRASSCMD=grass78
@@ -28,9 +30,9 @@ SCRIPTDIR="/home/tom/Dropbox/grass-moje/grass-run"
 #ATCOR_PARMS=""
 ATCOR_PARMS="gridsize=4000 minr=0.88 pixels=300 regression=orthogonal"
 ##NDMI difference mask parameters
-# max NDMI difference to pass the mask (to filter out substantial change in vegetation cover and moisture content)
+# max NDMI difference to pass the mask (to filter out change in vegetation cover and moisture content)
 MAXNDMIDIFF="0.1"
-# max absolute NDMI to pass the mask (to allow only dry/impervious surfaces which are generally more stable over time). Set it to 1.0 to effectively disable filtering high NDMI
+# max absolute NDMI to pass the mask (to allow only dry/impervious surfaces which are generally more stable over time). Set it to 1.0 to effectively disable filtering high NDMI (may be needed in regions with full vegetation cover).
 MAXNDMI="0.15"
 #Suffixes of INPUT files created with L2A_vrt-img (usually editing not needed)
 INPUTSX="_20m.img"
@@ -38,13 +40,15 @@ CLOUDSX="_cloud_mask_20m.img"
 WATERSX="_water_mask_20m.img"
 NDMISX="_ndmi_20m.img"
 SCLSX="_SCL_20m.vrt"
-OUTPUTSX="_20m_corr3or.img"
+# Output file suffix. It must be different, than above suffixes. 
+# corr4or - 20220719 reference, orthogonal regression, results straight in reflectance as the reference.
+OUTPUTSX="_20m_corr4or.img"
 #############################################################################
 
 
 ## Versioning settings
 SCRIPT_NAME=$(basename $0)
-SCRIPT_VERSION="0.2 (2020-01-15)" 
+SCRIPT_VERSION="0.5 (2023-04-20)" 
 SCRIPT_YEAR="2019"
 SCRIPT_AUTHOR="Tomas Brunclik"
 
@@ -244,8 +248,11 @@ echo
 time for i in 1 2 3 4 5 6 7 8 9
 do 
     LOG=${L2ABASE}${OUTPUTSX}.${i}_$(date +%s).log
-    # 
-    $GRASSCMD ${THELOC}/$MAPSETNAME --exec python ${SCRIPTDIR}/i.grid.correl.atcor.py --overwrite -k $ATCOR_PARMS input=input${INPUTSX%.*}.$i reference=${REFBASE}.$i output=input${OUTPUTSX%.*}.$i masks=${REFCLOUDMASK},input${CLOUDSX%.*},input${CLOUDSX%.*}_buff300,ndmidiffmask,scldiffmask 2>&1 | tee tmplog_$$ || exit 1
+    if [ -z "$REFCLOUDMASK" ]; then 
+      $GRASSCMD ${THELOC}/$MAPSETNAME --exec python ${SCRIPTDIR}/i.grid.correl.atcor.py --overwrite -k $ATCOR_PARMS input=input${INPUTSX%.*}.$i reference=${REFBASE}.$i output=input${OUTPUTSX%.*}.$i masks=input${CLOUDSX%.*},input${CLOUDSX%.*}_buff300,ndmidiffmask,scldiffmask 2>&1 | tee tmplog_$$ || exit 1
+    else
+      $GRASSCMD ${THELOC}/$MAPSETNAME --exec python ${SCRIPTDIR}/i.grid.correl.atcor.py --overwrite -k $ATCOR_PARMS input=input${INPUTSX%.*}.$i reference=${REFBASE}.$i output=input${OUTPUTSX%.*}.$i masks=${REFCLOUDMASK},input${CLOUDSX%.*},input${CLOUDSX%.*}_buff300,ndmidiffmask,scldiffmask 2>&1 | tee tmplog_$$ || exit 1
+    fi
     #Tidy up the log
     #The sed filter removes terminal codes for progress percents, grep empty lines with spaces
     cat tmplog_$$ | sed 's/\x1B\[[0-9;]\+[A-Za-z]//g' | grep "\S" > $LOG
