@@ -5,7 +5,10 @@ Set of scripts for spatially-variable radiometric normalization of satellite ima
 
 # The scripts
 ## i.grid.correl.atcor.py
-Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface. 
+Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface:
+
+![i_grid_correl_atcor_gui](https://github.com/user-attachments/assets/e2157015-85fb-4a31-8dec-b1ee27f65d3d)
+
 ### Installation and initialization
 For starting it in GUI mode from the GRASS GIS menu anytime, and also for initial registration of the script within your GRASS GIS, save it somewhere (preferably in some directory you intend for storing also other third-party GRASS scripts) and run it using the GRASS menu *File / Launch Script*. From now on, it is added into that GRASS GIS user search PATH, so you can use its name on the commnad-line, for example to do a loop over all bands of a satellite image imported into GRASS working mapset.
 ### Basic principle
