@@ -5,15 +5,15 @@ Set of scripts for spatially-variable radiometric normalization of satellite ima
 
 # The scripts
 ## i.grid.correl.atcor.py
-Provides the core functionality, ie. the radiometric normalization of single band of a satellite image based on reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides graphical user interface:
+Provides the core functionality, i.e. the radiometric normalization of a single band of a satellite image based on the reference image. It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. When run without arguments, it provides a graphical user interface:
 
 ![i_grid_correl_atcor_gui](https://github.com/user-attachments/assets/e2157015-85fb-4a31-8dec-b1ee27f65d3d)
 
 ### Installation and initialization
 For starting it in GUI mode from the GRASS GIS menu anytime, and also for initial registration of the script within your GRASS GIS, save it somewhere (preferably in some directory you intend for storing also other third-party GRASS scripts) and run it using the GRASS menu *File / Launch Script*. From now on, it is added into that GRASS GIS user search PATH, so you can use its name on the commnad-line, for example to do a loop over all bands of a satellite image imported into GRASS working mapset.
 ### Basic principle
-To achieve its purpose, that is to do the radiometric normalization in spatially-variable manner, it processes the input raster per tiles. In every tile, the correlation coeffitient *r* between the input and reference image is computed for every tile, and if it is better than the minimum and number of valid (ie. pseudo/invariant) pixels is over the minimum, linear regression slope *b* and intercept *a* between reference and input image tiles are computed. The slope and intercept are then interpolated over the whole area of the image. The slope and intercept rasters are then used to compute corrected raster band.
-Before the linear regression computation, the image should be masked, so that only the so called pseudo-invariant area pixels are used for the computation. It is user's responsibility to provide the required masks (but the other scripts in the set are here to help with that).
+To achieve its purpose, which is to do the radiometric normalization in a spatially-variable manner, it processes the input raster per tile. The correlation coefficient *r* between the input and reference image is computed for every tile. If it is better than the minimum and the number of valid (i.e., pseudo/invariant) pixels are over the minimum, linear regression slope *b* and intercept *a* between reference and input image tiles are computed. The slope and intercept are then interpolated over the whole area of the image. The slope and intercept rasters are then used to compute the corrected raster band.
+Before the linear regression computation, the image should be masked so that only the so-called pseudo-invariant area pixels are used for the computation. The user is responsible for providing the required masks (but the other scripts in the set are here to help with that).
 ### Synopsis
 ```
 Spatially variable correlation based radiometric normalization.
@@ -48,10 +48,10 @@ Parameters:
        lambda_i   Tykhonov regularization parameter (v.surf.bspline)
                   default: 0.1
 ```
-*Older releases of i.grid.correl.atcor.py with some additional documentation can be found at [this Dropbox link](https://www.dropbox.com/s/st5b4p5nkmn8t3k/i.grid.correl.atcor.html?dl=0). (No sign-up required, just close the pop up - but due to changes in Dropbox site you now need to download the html file and open it in browser for it to be rendered if you are not signed in.)*
+*Older releases of i.grid.correl.atcor.py with some additional documentation can be found at [this Dropbox link](https://www.dropbox.com/s/st5b4p5nkmn8t3k/i.grid.correl.atcor.html?dl=0). (No sign-up required; just close the pop-up - but due to changes in the Dropbox site, you now need to download the HTML file and open it in the browser for it to be rendered if you are not signed in.)*
 * * *
 ## L2A_grass_atcor.sh
-This Bash script allows using the script *i.grid.correl.atcor.py* on Sentinel-2 imagery without starting grass manually and process the whole set of bands of L2A Sentinel-2 product in one run. It needs set of input files created using *L2A_vrt-img.sh* script and the reference image already stored in PERMANENT mapset of the location used. Before first use make sure to edit user settings directly within the code.
+This Bash script allows using the script *i.grid.correl.atcor.py* on Sentinel-2 imagery without starting grass manually and processing the whole set of bands of L2A Sentinel-2 product in one run. It needs a set of input files created using *L2A_vrt-img.sh* script and the reference image already stored in the PERMANENT mapset of the location used. Before first use, edit user settings directly within the code.
 ### Synopsis
 ```
 Usage:  
@@ -87,9 +87,9 @@ PARAMETERS
 ```
 * * *
 ## L2A_vrt-img.sh
-Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .vrt and .img files for all resolution image bands for that tile. Also works on already unpacked .SAFE directory. Additionaly, the script creates 20m resolution water and cloud+shade masks and MNDWI, NDMI and NDVI indices.
-Files generated by this script are used by *L2A_grass_atcor.sh*, but are also suitable for general use in GIS software, like [QGIS](https://qgis.osgeo.org). For that reason the script creates also some files not used by L2A_grass_atcor.sh, like the 10m and 60m multiband .img files.
-Before first use make sure to edit user settings directly within the code.
+Script to take a zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it, and create .vrt and .img files for all resolution image bands for that tile. Also works on already unpacked .SAFE directory. Additionally, the script creates 20m resolution water and cloud+shade masks and MNDWI, NDMI, and NDVI indices.
+Files generated by this script are used by *L2A_grass_atcor.sh* but are also suitable for general use in GIS software, like [QGIS](https://qgis.osgeo.org). For that reason, the script also creates some files not used by L2A_grass_atcor.sh, like the 10m and 60m multiband .img files.
+Before first use, edit user settings directly within the code.
 
 The multiband .img and .vrt files MSI band order:
 
@@ -113,10 +113,10 @@ You can also drop the input file/directory to process on the script icon in GUI.
 L2A_vrt-img.sh - Script to take zip file with Sentinel-2 L2A SAFE T33UWR imagery, unzip it and create .VRT and .IMG files for all resolution image bands for that tile (for other tile than T33UWR - edit the USER VARIABLES in the script). 
           This instance invoked as /home/tom/scripts/L2A_vrt-img.sh
 ```
-**Please note, [issue 2](https://github.com/tomas4/grid-correl-atcor/issues/2) have been closed, but it brought change in values reported by QGIS - it now reports values of reflectance, numbers less than 1, while previous version reported quantized values, numbers generally in thousands. This may affect your workflows. For example if you have prepared color styles for the files, you have to rework them, or the multiband files will generally look as solid black.**
+**Please note, [issue 2](https://github.com/tomas4/grid-correl-atcor/issues/2) has been closed, but it brought a change in values reported by QGIS - it now reports values of reflectance, numbers less than 1. In contrast, the previous version reported quantized values, numbers generally in thousands. This may affect your workflow. For example, if you have prepared color styles for the files, you must rework them, or the multiband files will generally look like solid black.**
 ***
 ## r.buff.cloudmask.py
-Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there also to mask out areas in close vicinity of detected clouds, where usually are present thin clouds not detected properly and strong neigborhood effects (parasite light reflected off cloud edge etc.). The script is needed by L2A_grass_atcor.sh.
+Script to despeckle and buffer cloud mask derived from SCL classification (or other cloud mask containing artifacts in the form of misclassified small few pixel clouds or small holes in them). It works within the [GRASS GIS](https:/grass.osgeo.org) 7.x session. The buffering is there also to mask out areas in close vicinity of detected clouds, where usually thin clouds are not appropriately detected and strong neighborhood effects (parasite light reflected off cloud edge, etc.). The script is needed by L2A_grass_atcor.sh.
 See *i.grid.correl.atcor.py* for installation instructions.
 
 ### Synopsis
@@ -141,7 +141,7 @@ Parameters:
 ```
 ***
 ## L1C_fmask.sh
-Simple wrapper script for [FMASK](https://github.com/gersl/fmask) algorithm to create alternative cloud mask to that created by *L2A_vrt_img.sh* from level-2 scene classification of Sentinel-2 imagery. Note that you need FMASK4.x installation (tested with FMASK 4.3) and have to edit the user settings within the *L1C_fmask.sh* file. Also note that you need Level-1C Sentinel-2 image, not Level-2A in this case. In many cases the FMASK 4.3 based cloudmask is higher quality than L2A SCL based cloudmask. To use the resulting cloudmask by the *L2A_grid_atcor.sh* script, make backup of the *L2A_vrt_img.sh* created cloudmask file and rename the FMASK based cloudmask exactly as L2A SCL based cloudmask was named.
+A simple wrapper script for [FMASK](https://github.com/gersl/fmask) algorithm to create an alternative cloud mask to that created by *L2A_vrt_img.sh* from level-2 scene classification of Sentinel-2 imagery. Note that you need FMASK4.x installation (tested with FMASK 4.3) and have to edit the user settings within the *L1C_fmask.sh* file. Also, I'd like to point out that you need Level-1C Sentinel-2 image, not Level-2A in this case. In many cases, the FMASK 4.3-based cloud mask is of higher quality than the L2A SCL-based cloud mask. To use the resulting cloud mask by the *L2A_grid_atcor.sh* script, make a backup of the *L2A_vrt_img.sh* created cloud mask file and rename the FMASK-based cloud mask exactly as the L2A SCL-based cloud mask was named.
 
 ### Synopsis
 ```
