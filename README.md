@@ -1,3 +1,10 @@
+**This repository is archived.**
+
+The successor of part of this suite of scripts is in repository [s2-processor-wq](https://github.com/tomas4/s2-processor-wq)
+
+Note that the new s2-processor-wq only replaces and extends functionality of script L2A_vrt_img.sh. The new version creates multiband files with slightly different band sets. and is Python based, hence multiplatform.
+<hr/>
+
 README
 
 # grid-correl-atcor
